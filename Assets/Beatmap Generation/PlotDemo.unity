@@ -215,8 +215,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   generator: {fileID: 1367093181}
-  realTimeSamples: 0
-  preProcessSamples: 1
 --- !u!4 &1325650114
 Transform:
   m_ObjectHideFlags: 0
@@ -241,7 +239,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: c2015247f2a194240823f8b7872377c6, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 5fbd6e9a343b9fc46bdb304be595106b, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.502
   m_Pitch: 1
