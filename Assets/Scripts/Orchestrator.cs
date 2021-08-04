@@ -11,9 +11,6 @@ public class Orchestrator : MonoBehaviour
 	public GameObject UICountDown;
 	public GameObject indicatorPrefab;
 	public GameObject failedPrefab;
-	public TextMeshProUGUI scoreAndComboText;
-	public TextMeshProUGUI feedbackText;
-	private Coroutine fadeText;
 
 	private Beatmap map;
 	private string mapFilesPath = @"C:\Users\Robert-Desktop\Rythym Game\Assets\Beatmaps";
@@ -27,7 +24,6 @@ public class Orchestrator : MonoBehaviour
 	public KeyCode downKey;
 	public KeyCode upKey;
 
-	private Scorer scorer;
 	private bool songHasStarted = false;
 	private float previousFrameTime;
 	private float lastReportedPlayheadPosition;
@@ -38,12 +34,9 @@ public class Orchestrator : MonoBehaviour
 	private float goodHit = .1f;
 	private float perfectHit = .05f;
 
-
-	// Start is called before the first frame update
 	void Start()
 	{
 		Application.targetFrameRate = 144;
-		scorer = new Scorer();
 		audioSource = GetComponent<AudioSource>();
 		GameObject levelInfo = GameObject.Find("LevelInfo");
 
@@ -66,7 +59,7 @@ public class Orchestrator : MonoBehaviour
 		walker.GetComponent<LineWalker>().Init();
 		SpawnBeatIndicators();
 		GetComponent<LineDrawer>().SetPoints(walker.GetComponent<LineWalker>().points);
-		UpdateScoreAndComboText();
+		GameUIController.Instance.UpdateScoreAndComboText();
 		StartCoroutine(BeginCountDownAndPlay());
 	}
 
@@ -100,7 +93,6 @@ public class Orchestrator : MonoBehaviour
 		walker.GetComponent<LineWalker>().SetReady();
 	}
 
-	// Update is called once per frame
 	void Update()
 	{
 		if (!songHasStarted)
@@ -170,36 +162,6 @@ public class Orchestrator : MonoBehaviour
 		}
 	}
 
-	private void UpdateScoreAndComboText()
-	{
-		scoreAndComboText.text = "Score: " + scorer.GetScore() + "\nCombo: " + scorer.GetCombo();
-	}
-
-	private void UpdateFeedbackText(GlobalEnums.HitType hitType)
-	{
-		if (fadeText != null)
-			StopCoroutine(fadeText);
-		
-		RestoreFeedbackText();
-		feedbackText.text = GlobalEnums.feedbackTexts[(int)hitType];
-		fadeText = StartCoroutine(FadeFeedbackText(1f));
-	}
-
-	public IEnumerator FadeFeedbackText(float t)
-	{
-		feedbackText.color = new Color(feedbackText.color.r, feedbackText.color.g, feedbackText.color.b, 1);
-		while (feedbackText.color.a > 0.0f)
-		{
-			feedbackText.color = new Color(feedbackText.color.r, feedbackText.color.g, feedbackText.color.b, feedbackText.color.a - (Time.deltaTime / t));
-			yield return null;
-		}
-	}
-
-	private void RestoreFeedbackText()
-	{
-		feedbackText.color = new Color(feedbackText.color.r, feedbackText.color.g, feedbackText.color.b);
-	}
-
 	private void UpdateCurrentIndicator()
 	{
 		float timeOfCurrIndicator = map.beats[currIndicatorIndex].time;
@@ -223,27 +185,27 @@ public class Orchestrator : MonoBehaviour
 
 	private void OnHitBeat(int index, GlobalEnums.HitType hitType, GlobalEnums.BeatType beatType)
 	{
-		int gainedScore = scorer.Hit(GlobalEnums.BeatType.Single);
+		int gainedScore = Scorer.Hit(GlobalEnums.BeatType.Single);
 		map.beats[index].hasBeenPassed = true;
 		indicators[index].transform.GetChild(0).GetComponent<ParticleSystem>().Play();
 		indicators[index].transform.GetChild(1).GetComponent<ParticleSystem>().Play();
 		//play good sound/particle effect
 		indicators[index].GetComponent<SpriteRenderer>().forceRenderingOff = true;
-		UpdateScoreAndComboText();
-		UpdateFeedbackText(hitType);
+		GameUIController.Instance.UpdateScoreAndComboText();
+		GameUIController.Instance.UpdateFeedbackText(hitType);
 	}
 
 	public void OnMissBeat(int index)
 	{
-		scorer.Miss();
+		Scorer.Miss();
 		//need to check if it's close enough to destroy or just ignore input?
 		map.beats[index].hasBeenPassed = true;
 		indicators[index].GetComponent<SpriteRenderer>().forceRenderingOff = true;
 		GameObject failedX = GameObject.Instantiate(failedPrefab);
 		failedX.transform.position = indicators[index].transform.position;
 		Destroy(failedX, 1f);
-		UpdateScoreAndComboText();
-		UpdateFeedbackText(GlobalEnums.HitType.Miss);
+		GameUIController.Instance.UpdateScoreAndComboText();
+		GameUIController.Instance.UpdateFeedbackText(GlobalEnums.HitType.Miss);
 	}
 
 	private void SpawnBeatIndicators()

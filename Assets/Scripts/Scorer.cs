@@ -2,22 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Scorer
+public static class Scorer
 {
-    public int score;
-    public int combo = 1;
+    public static int score = 0;
+    public static int combo = 1;
 
-    public int GetScore()
+    public static int GetScore()
     {
         return score;
     }
 
-    public int GetCombo()
+    public static int GetCombo()
     {
         return combo;
     }
 
-    public int Hit(GlobalEnums.BeatType type, float? heldTime = null)
+    public static int Hit(GlobalEnums.BeatType type, float? heldTime = null)
     {
         //switch on type to score
         float points;
@@ -55,12 +55,12 @@ public class Scorer
         return gainedPoints;
     }
 
-    public void Miss()
+    public static void Miss()
     {
         ResetCombo();
     }
 
-    private void ResetCombo()
+    private static void ResetCombo()
     {
         combo = 1;
     }
