@@ -11,9 +11,6 @@ using DSPLib;
 public class SongController : MonoBehaviour {
 
 	public BeatmapGenerator generator;
-	float[] realTimeSpectrum;
-	SpectralFluxAnalyzer realTimeSpectralFluxAnalyzer;
-	PlotController realTimePlotController;
 
 	int numChannels;
 	int numTotalSamples;
@@ -21,48 +18,13 @@ public class SongController : MonoBehaviour {
 	float clipLength;
 	float[] multiChannelSamples;
 	SpectralFluxAnalyzer preProcessedSpectralFluxAnalyzer;
-	PlotController preProcessedPlotController;
 
 	AudioSource audioSource;
 
-	public bool realTimeSamples = true;
-	public bool preProcessSamples = false;
-
-	void Start() {
-		audioSource = GetComponent<AudioSource>();
-
-		// Preprocess entire audio file upfront
-		if (preProcessSamples) {
-			preProcessedSpectralFluxAnalyzer = new SpectralFluxAnalyzer ();
-			//preProcessedPlotController = GameObject.Find ("PreprocessedPlot").GetComponent<PlotController> ();
-
-			// Need all audio samples.  If in stereo, samples will return with left and right channels interweaved
-			// [L,R,L,R,L,R]
-			multiChannelSamples = new float[audioSource.clip.samples * audioSource.clip.channels];
-			numChannels = audioSource.clip.channels;
-			numTotalSamples = audioSource.clip.samples;
-			clipLength = audioSource.clip.length;
-
-			// We are not evaluating the audio as it is being played by Unity, so we need the clip's sampling rate
-			this.sampleRate = audioSource.clip.frequency;
-
-			audioSource.clip.GetData(multiChannelSamples, 0);
-			Debug.Log ("GetData done");
-			getFullSpectrumThreaded();
-
-			//Thread bgThread = new Thread (this.getFullSpectrumThreaded);
-
-			//Debug.Log ("Starting Background Thread");
-			//bgThread.Start ();
-		}
-	}
-
-	public void GenerateRandomBeatmap()
-    {
+	void Start()
+	{
 		audioSource = GetComponent<AudioSource>();
 		preProcessedSpectralFluxAnalyzer = new SpectralFluxAnalyzer();
-		//preProcessedPlotController = GameObject.Find ("PreprocessedPlot").GetComponent<PlotController> ();
-
 		// Need all audio samples.  If in stereo, samples will return with left and right channels interweaved
 		// [L,R,L,R,L,R]
 		multiChannelSamples = new float[audioSource.clip.samples * audioSource.clip.channels];

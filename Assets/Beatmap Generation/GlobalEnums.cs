@@ -7,8 +7,7 @@ public class GlobalEnums : MonoBehaviour
     public enum BeatType
     {
         Single,
-        TwoKey,
-        Held
+        TwoKey
     }
 
     [System.Serializable]
