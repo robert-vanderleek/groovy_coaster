@@ -6,6 +6,7 @@ public static class Scorer
 {
     public static int score = 0;
     public static int combo = 1;
+    public static int longestCombo = int.MinValue;
 
     public static int GetScore()
     {
@@ -17,11 +18,10 @@ public static class Scorer
         return combo;
     }
 
-    public static int Hit(GlobalEnums.BeatType type, float? heldTime = null)
+    public static int Hit(GlobalEnums.BeatType type)
     {
         //switch on type to score
         float points;
-
         switch (type)
         {
             case GlobalEnums.BeatType.Single:
@@ -30,18 +30,6 @@ public static class Scorer
 
             case GlobalEnums.BeatType.TwoKey:
                 points = 1000;
-                break;
-
-            case GlobalEnums.BeatType.Held:
-                if (heldTime == null)
-                {
-                    Debug.LogError("no held time passed in!");
-                    points = 500;
-                }
-                else
-                {
-                    points = 500 * (float)heldTime;
-                }
                 break;
 
             default:
@@ -57,6 +45,10 @@ public static class Scorer
 
     public static void Miss()
     {
+        //check if new longest combo
+        if (combo > longestCombo)
+            longestCombo = combo;
+
         ResetCombo();
     }
 
