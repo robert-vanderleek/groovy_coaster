@@ -6,17 +6,24 @@ using UnityEngine.UI;
 
 public class GameUIController : MonoBehaviour
 {
+    //general UI objects 
+    public GameObject UICountDown;
     public TextMeshProUGUI scoreAndComboText;
     public TextMeshProUGUI feedbackText;
+
+    //coroutine used to fade feedback text, tracked so we can interrupt before it's done
     private Coroutine fadeText;
 
+    //used to fade to black
     public GameObject blackOutSquare;
     private int fadeSpeed = 1;
 
-    private static GameUIController _instance;
+    //signal orchestrator that countdown is done
+    public delegate void OnCountDownEnd();
+    public event OnCountDownEnd countDownEnd;
 
     public static GameUIController Instance { get { return _instance; } }
-
+    private static GameUIController _instance;
 
     private void Awake()
     {
@@ -29,7 +36,28 @@ public class GameUIController : MonoBehaviour
             _instance = this;
         }
     }
-    
+
+    public IEnumerator ShowCountDown()
+    {
+        TextMeshProUGUI text = UICountDown.GetComponent<TextMeshProUGUI>();
+        UICountDown.SetActive(true);
+
+        for (int i = 3; i >= 0; i--)
+        {
+            if (i == 0)
+            {
+                text.text = "Go!";
+            }
+            else
+            {
+                text.text = i.ToString();
+            }
+            yield return new WaitForSecondsRealtime(1f);
+        }
+        countDownEnd?.Invoke();
+        UICountDown.SetActive(false);
+    }
+
     public void UpdateScoreAndComboText()
 	{
 		scoreAndComboText.text = "Score: " + Scorer.GetScore() + "\nCombo: " + Scorer.GetCombo();
@@ -58,6 +86,14 @@ public class GameUIController : MonoBehaviour
     public void RestoreFeedbackText()
     {
         feedbackText.color = new Color(feedbackText.color.r, feedbackText.color.g, feedbackText.color.b);
+    }
+
+    public void HandleEndOfSong()
+    {
+        //fade to black, keeping score/combo on screen cuz it's fun
+        FadeBlackOutSquare(true);
+        //todo: create end of song UI for score + stats
+        //populate and enable here
     }
 
     private IEnumerator FadeBlackOutSquare(bool fadeToBlack)

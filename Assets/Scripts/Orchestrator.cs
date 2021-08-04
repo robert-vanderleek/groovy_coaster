@@ -8,7 +8,6 @@ using System;
 public class Orchestrator : MonoBehaviour
 {
 	public GameObject walker;
-	public GameObject UICountDown;
 	public GameObject indicatorPrefab;
 	public GameObject failedPrefab;
 
@@ -60,32 +59,12 @@ public class Orchestrator : MonoBehaviour
 		SpawnBeatIndicators();
 		GetComponent<LineDrawer>().SetPoints(walker.GetComponent<LineWalker>().points);
 		GameUIController.Instance.UpdateScoreAndComboText();
-		StartCoroutine(BeginCountDownAndPlay());
-	}
-
-	private IEnumerator BeginCountDownAndPlay()
-	{
-		TextMeshProUGUI text = UICountDown.GetComponent<TextMeshProUGUI>();
-		UICountDown.SetActive(true);
-
-		for (int i = 3; i >= 0; i--)
-		{
-			if (i == 0)
-			{
-				text.text = "Go!";
-			}
-			else
-			{
-				text.text = i.ToString();
-			}
-			yield return new WaitForSecondsRealtime(1f);
-		}
-		SongStarted();
+        GameUIController.Instance.countDownEnd += SongStarted;
+		StartCoroutine(GameUIController.Instance.ShowCountDown());
 	}
 
 	private void SongStarted()
 	{
-		UICountDown.SetActive(false);
 		previousFrameTime = Time.time;
 		lastReportedPlayheadPosition = 0;
 		audioSource.Play();
@@ -108,8 +87,7 @@ public class Orchestrator : MonoBehaviour
 
 		if (currIndicatorIndex > map.beats.Count - 1)
         {
-			print("finished song!");
-			//do some finihsing up stuff here
+			GameUIController.Instance.HandleEndOfSong();
 			return;
         }
 
