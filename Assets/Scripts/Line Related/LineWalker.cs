@@ -37,7 +37,7 @@ public class LineWalker : MonoBehaviour
 
     void Update()
     {
-        if (!isReady)
+        if (!isReady && enabled)
             return;
 
         if (Vector3.Distance(currTarget, transform.position) <= .1f)
