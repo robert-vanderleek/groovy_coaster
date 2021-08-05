@@ -130,9 +130,6 @@ public class Orchestrator : MonoBehaviour
 				case GlobalEnums.BeatType.TwoKey: //double hit beat, check two keys down and give points
 					break;
 
-				case GlobalEnums.BeatType.Held: //maybe check for anykey at the top and then keydown on the other two?
-					break;
-
 				default:
 					Debug.LogError("Unrecognized beat type: " + currType);
 					break;
