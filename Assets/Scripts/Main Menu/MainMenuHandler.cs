@@ -15,7 +15,7 @@ public class MainMenuHandler : MonoBehaviour
     public GameObject songPrefab;
     public GameObject scrollContentObj;
     public GameObject levelInfo;
-    private string mapFilesPath = @"C:\Users\Robert-Desktop\Rythym Game\Assets\Music";
+    private string musicFilesPath;
     private List<AudioClip> clips;
 
     private void Awake()
@@ -26,6 +26,7 @@ public class MainMenuHandler : MonoBehaviour
 
     private void Start()
     {
+        musicFilesPath = Application.dataPath + @"\Music";
         DontDestroyOnLoad(levelInfo);
         StartCoroutine(GetClipList());
     }
@@ -63,7 +64,7 @@ public class MainMenuHandler : MonoBehaviour
     private IEnumerator GetClipList()
     {
         string songName;
-        foreach (string file in Directory.EnumerateFiles(mapFilesPath, "*.mp3"))
+        foreach (string file in Directory.EnumerateFiles(musicFilesPath, "*.mp3"))
         {
             songName = Path.GetFileNameWithoutExtension(file);
             using (UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip(file, AudioType.MPEG))

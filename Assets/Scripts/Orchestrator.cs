@@ -12,7 +12,7 @@ public class Orchestrator : MonoBehaviour
 	public GameObject failedPrefab;
 
 	private Beatmap map;
-	private string mapFilesPath = @"C:\Users\Robert-Desktop\Rythym Game\Assets\Beatmaps";
+	private string mapFilesPath;
 	private string songName;
 	private AudioClip songClip;
 	private List<GameObject> indicators;
@@ -35,6 +35,7 @@ public class Orchestrator : MonoBehaviour
 
 	void Start()
 	{
+		mapFilesPath = Application.dataPath + @"\Beatmaps";
 		Application.targetFrameRate = 144;
 		audioSource = GetComponent<AudioSource>();
 		GameObject levelInfo = GameObject.Find("LevelInfo");
@@ -185,6 +186,7 @@ public class Orchestrator : MonoBehaviour
 
 	private void SpawnBeatIndicators()
 	{
+		print(Application.dataPath);
 		GameObject indicatorsParent = GameObject.Find("Indicators");
 		GameObject indicator;
 		LineWalker lineWalker = walker.GetComponent<LineWalker>();
@@ -193,7 +195,22 @@ public class Orchestrator : MonoBehaviour
 		{
 			//we have non-normalized time already, add normalized time
 			map.beats[i].normalizedTime = map.beats[i].time / songClip.length;
-			indicator = GameObject.Instantiate(indicatorPrefab);
+			switch (map.beats[i].beatType)
+            {
+				case GlobalEnums.BeatType.Single:
+					indicator = GameObject.Instantiate(indicatorPrefab);
+					break;
+
+				case GlobalEnums.BeatType.TwoKey:
+					indicator = GameObject.Instantiate(indicatorPrefab);
+					break;
+
+				default:
+					//default to plain indicator so we don't fail
+					indicator = GameObject.Instantiate(indicatorPrefab);
+					Debug.LogError("Unkown beat type: " + (int)map.beats[i].beatType);
+					break;
+            }
 			indicator.transform.position = lineWalker.GetPoint(map.beats[i].normalizedTime);
 			indicator.transform.parent = indicatorsParent.transform;
 			indicators.Add(indicator);

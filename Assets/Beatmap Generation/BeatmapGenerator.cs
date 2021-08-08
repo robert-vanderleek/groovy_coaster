@@ -6,11 +6,12 @@ using UnityEngine;
 public class BeatmapGenerator : MonoBehaviour
 {
     public AudioSource song;
-    public string beatMapLocation = @"C:\Users\Robert-Desktop\Rythym Game\Assets\Beatmaps";
+    public string beatMapLocation;
     public string songName;
 
     public void CreateBeatmap(List<SpectralFluxInfo> info)
     {
+        beatMapLocation = Application.dataPath + @"\Beatmaps";
         songName = song.clip.name;
         System.Random r = new System.Random();
         Beatmap map = new Beatmap
