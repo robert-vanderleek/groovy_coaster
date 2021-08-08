@@ -56,6 +56,10 @@ public class LineWalker : MonoBehaviour
         {
             transform.position = transform.position + normalizedDir * speed * Time.deltaTime;
         }
+
+        Vector3 rot = Quaternion.LookRotation(currTarget - transform.position).eulerAngles;
+        rot.x = 90;
+        transform.rotation = Quaternion.Euler(rot);
     }
 
     private float CalculateTotalDistance()
