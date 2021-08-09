@@ -9,6 +9,7 @@ public class Orchestrator : MonoBehaviour
 {
 	public GameObject walker;
 	public GameObject indicatorPrefab;
+	public GameObject twoHitIndicatorPrefab;
 	public GameObject failedPrefab;
 
 	private Beatmap map;
@@ -202,7 +203,7 @@ public class Orchestrator : MonoBehaviour
 					break;
 
 				case GlobalEnums.BeatType.TwoKey:
-					indicator = GameObject.Instantiate(indicatorPrefab);
+					indicator = GameObject.Instantiate(twoHitIndicatorPrefab);
 					break;
 
 				default:
