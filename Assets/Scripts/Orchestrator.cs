@@ -29,6 +29,8 @@ public class Orchestrator : MonoBehaviour
 	private float lastReportedPlayheadPosition;
 	private float songTime;
 	private int currIndicatorIndex = 0;
+	private float aPrevHitTime;
+	private float bPrevHitTime;
 
 	private float okHit = .15f;
 	private float goodHit = .1f;
@@ -77,8 +79,12 @@ public class Orchestrator : MonoBehaviour
 	void Update()
 	{
 		if (!songHasStarted)
-			return; 
+			return;
 
+		if (map.beats[currIndicatorIndex].beatType == GlobalEnums.BeatType.TwoKey)
+			UpdateDoubleHitTimes();
+
+		//sync w/ audio source
 		songTime += Time.time - previousFrameTime;
 		previousFrameTime = Time.time;
 		if (audioSource.time != lastReportedPlayheadPosition)
@@ -93,43 +99,31 @@ public class Orchestrator : MonoBehaviour
 			return;
         }
 
-		//update which indicator we are looking at
 		UpdateCurrentIndicator();
 		
-		if (Input.GetKeyDown(KeyCode.F))
+		if (Input.anyKeyDown)
 		{
 			float difference = Math.Abs(map.beats[currIndicatorIndex].time - songTime);
-
-			if (difference < perfectHit)
-			{
-				OnHitBeat(currIndicatorIndex, GlobalEnums.HitType.Perfect, GlobalEnums.BeatType.Single);
-				currIndicatorIndex++;
-			}
-			else if (difference < goodHit)
-			{
-				OnHitBeat(currIndicatorIndex, GlobalEnums.HitType.Good, GlobalEnums.BeatType.Single);
-				currIndicatorIndex++;
-			}
-			else if (difference < okHit)
-			{
-				OnHitBeat(currIndicatorIndex, GlobalEnums.HitType.OK, GlobalEnums.BeatType.Single);
-				currIndicatorIndex++;
-			}
-			else
-			{
-				OnMissBeat(currIndicatorIndex);
-				currIndicatorIndex++;
-			}
-			return;
-
 			GlobalEnums.BeatType currType = map.beats[currIndicatorIndex].beatType;
 
 			switch (currType)
 			{
 				case GlobalEnums.BeatType.Single: //single hit beat, check we're within times and give points
+					if (Input.GetKeyDown(KeyCode.F))
+                    {
+						print("single");
+						CalculateHit(difference, currType);
+                    }
 					break;
 
 				case GlobalEnums.BeatType.TwoKey: //double hit beat, check two keys down and give points
+					bool oneKeyDown = Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.J);
+					print("key down: " + oneKeyDown);
+					if (oneKeyDown && (aPrevHitTime < (Time.time - 1f) || bPrevHitTime < (Time.time - 1f)))
+					{
+						print("double");
+						CalculateHit(difference, currType);
+					}
 					break;
 
 				default:
@@ -139,7 +133,49 @@ public class Orchestrator : MonoBehaviour
 		}
 	}
 
-	private void UpdateCurrentIndicator()
+    private void UpdateDoubleHitTimes()
+    {
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+			aPrevHitTime = Time.time;
+        }
+
+		if (Input.GetKeyDown(KeyCode.J))
+        {
+			bPrevHitTime = Time.time;
+        }
+    }
+
+    private void CalculateHit(float difference, GlobalEnums.BeatType beatType)
+    {
+		if (difference < perfectHit)
+		{
+			OnHitBeat(currIndicatorIndex, GlobalEnums.HitType.Perfect, GlobalEnums.BeatType.Single);
+		}
+		else if (difference < goodHit)
+		{
+			OnHitBeat(currIndicatorIndex, GlobalEnums.HitType.Good, GlobalEnums.BeatType.Single);
+		}
+		else if (difference < okHit)
+		{
+			OnHitBeat(currIndicatorIndex, GlobalEnums.HitType.OK, GlobalEnums.BeatType.Single);
+		}
+		else
+		{
+			OnMissBeat(currIndicatorIndex);
+		}
+		currIndicatorIndex++;
+
+		if (map.beats[currIndicatorIndex].beatType == GlobalEnums.BeatType.TwoKey) ;
+			//ResetHitTimes();
+	}
+
+    private void ResetHitTimes()
+    {
+		aPrevHitTime = bPrevHitTime = -1;
+    }
+
+    private void UpdateCurrentIndicator()
 	{
 		float timeOfCurrIndicator = map.beats[currIndicatorIndex].time;
 		if (songTime > timeOfCurrIndicator + okHit && currIndicatorIndex + 1 <= map.beats.Count)
