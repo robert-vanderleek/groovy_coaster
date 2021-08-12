@@ -11,12 +11,18 @@ public class GameUIController : MonoBehaviour
     public TextMeshProUGUI scoreAndComboText;
     public TextMeshProUGUI feedbackText;
 
+    //end of game UI
+    public GameObject endGameUIParent;
+    public TextMeshProUGUI finalScoreText;
+    public TextMeshProUGUI longestComboText;
+    public TextMeshProUGUI songInfoText;
+
     //coroutine used to fade feedback text, tracked so we can interrupt before it's done
     private Coroutine fadeText;
 
     //used to fade to black
     public GameObject blackOutSquare;
-    private int fadeSpeed = 1;
+    private float fadeSpeed = .2f;
 
     //signal orchestrator that countdown is done
     public delegate void OnCountDownEnd();
@@ -91,39 +97,34 @@ public class GameUIController : MonoBehaviour
     public void HandleEndOfSong()
     {
         //fade to black, keeping score/combo on screen cuz it's fun
-        FadeBlackOutSquare(true);
-        //todo: create end of song UI for score + stats
-        //populate and enable here
+        endGameUIParent.SetActive(true);
+        StartCoroutine(FadeBlackOutSquare());
+        scoreAndComboText.enabled = false;
+        longestComboText.text += Scorer.longestCombo;
+        finalScoreText.text += Scorer.GetScore();
+        songInfoText.text = GameObject.Find("Orchestrator").GetComponent<AudioSource>().clip.name;
     }
 
-    private IEnumerator FadeBlackOutSquare(bool fadeToBlack)
+    public void ReturnToMainMenu()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+    }
+
+    private IEnumerator FadeBlackOutSquare()
     {
         Color objColor = blackOutSquare.GetComponent<Image>().color;
         float fadeAmount;
 
-        if (fadeToBlack)
+        objColor.a = 0;
+        blackOutSquare.SetActive(true);
+        while (blackOutSquare.GetComponent<Image>().color.a < 1)
         {
-            objColor.a = 0;
-            blackOutSquare.SetActive(true);
-            while (blackOutSquare.GetComponent<Image>().color.a < 1)
-            {
-                fadeAmount = objColor.a + (fadeSpeed * Time.deltaTime);
-                objColor = new Color(objColor.r, objColor.g, objColor.b, fadeAmount);
-                blackOutSquare.GetComponent<Image>().color = objColor;
-                yield return null;
-            }
+            fadeAmount = objColor.a + (fadeSpeed * Time.deltaTime);
+            print(fadeAmount + " " + fadeSpeed * Time.deltaTime);
+            objColor = new Color(objColor.r, objColor.g, objColor.b, fadeAmount);
+            blackOutSquare.GetComponent<Image>().color = objColor;
+            yield return null;
         }
-        else
-        {
-            objColor.a = 1;
-            while (blackOutSquare.GetComponent<Image>().color.a > 0)
-            {
-                fadeAmount = objColor.a - (fadeSpeed * Time.deltaTime);
-                objColor = new Color(objColor.r, objColor.g, objColor.b, fadeAmount);
-                blackOutSquare.GetComponent<Image>().color = objColor;
-                yield return null;
-            }
-            blackOutSquare.SetActive(false);
-        }
+
     }
 }

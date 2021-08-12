@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System.IO;
-using TMPro;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 
 public class Orchestrator : MonoBehaviour
 {
@@ -19,18 +17,17 @@ public class Orchestrator : MonoBehaviour
 	private List<GameObject> indicators;
 	private AudioSource audioSource;
 
-	public KeyCode rightKey;
-	public KeyCode leftKey;
-	public KeyCode downKey;
-	public KeyCode upKey;
+	public KeyCode left;
+	public KeyCode right;
+	private float leftPrevHitTime;
+	private float rightPrevHitTime;
 
 	private bool songHasStarted = false;
+	private bool songHasFinished = false;
 	private float previousFrameTime;
 	private float lastReportedPlayheadPosition;
 	private float songTime;
 	private int currIndicatorIndex = 0;
-	private float aPrevHitTime;
-	private float bPrevHitTime;
 
 	private float okHit = .15f;
 	private float goodHit = .1f;
@@ -38,10 +35,13 @@ public class Orchestrator : MonoBehaviour
 
 	void Start()
 	{
-		mapFilesPath = Application.dataPath + @"\Beatmaps";
 		Application.targetFrameRate = 144;
+		leftPrevHitTime = Time.time;
+		rightPrevHitTime = Time.time;
+		mapFilesPath = Application.dataPath + @"\Beatmaps";
 		audioSource = GetComponent<AudioSource>();
 		GameObject levelInfo = GameObject.Find("LevelInfo");
+		indicators = new List<GameObject>();
 
 		if (levelInfo != null)
 		{
@@ -54,7 +54,6 @@ public class Orchestrator : MonoBehaviour
 			songClip = audioSource.clip;
 			print("level info is null, loading from pre-determined clip: " + songClip.name);
 		}
-		indicators = new List<GameObject>();
 		songName = songClip.name + "map";
 		string jsonMap = File.ReadAllText(Path.Combine(mapFilesPath, songName + ".json"));
 		print("loading beatmap from: " + Path.Combine(mapFilesPath, songName + ".json"));
@@ -63,7 +62,7 @@ public class Orchestrator : MonoBehaviour
 		SpawnBeatIndicators();
 		GetComponent<LineDrawer>().SetPoints(walker.GetComponent<LineWalker>().points);
 		GameUIController.Instance.UpdateScoreAndComboText();
-        GameUIController.Instance.countDownEnd += SongStarted;
+		GameUIController.Instance.countDownEnd += SongStarted;
 		StartCoroutine(GameUIController.Instance.ShowCountDown());
 	}
 
@@ -81,6 +80,14 @@ public class Orchestrator : MonoBehaviour
 		if (!songHasStarted)
 			return;
 
+		if (songHasFinished)
+		{
+			print("song ended");
+			GameUIController.Instance.HandleEndOfSong();
+			this.enabled = false;
+			return;
+		}
+
 		if (map.beats[currIndicatorIndex].beatType == GlobalEnums.BeatType.TwoKey)
 			UpdateDoubleHitTimes();
 
@@ -93,12 +100,6 @@ public class Orchestrator : MonoBehaviour
 			lastReportedPlayheadPosition = audioSource.time;
 		}
 
-		if (currIndicatorIndex > map.beats.Count - 1)
-        {
-			GameUIController.Instance.HandleEndOfSong();
-			return;
-        }
-
 		UpdateCurrentIndicator();
 		
 		if (Input.anyKeyDown)
@@ -109,19 +110,16 @@ public class Orchestrator : MonoBehaviour
 			switch (currType)
 			{
 				case GlobalEnums.BeatType.Single: //single hit beat, check we're within times and give points
-					if (Input.GetKeyDown(KeyCode.F))
-                    {
-						print("single");
+					if (Input.GetKeyDown(left) || Input.GetKeyDown(right))
+					{
 						CalculateHit(difference, currType);
-                    }
+					}
 					break;
 
 				case GlobalEnums.BeatType.TwoKey: //double hit beat, check two keys down and give points
-					bool oneKeyDown = Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.J);
-					print("key down: " + oneKeyDown);
-					if (oneKeyDown && (aPrevHitTime < (Time.time - 1f) || bPrevHitTime < (Time.time - 1f)))
+					//print($"left prev: {leftPrevHitTime} left diff {Time.time - leftPrevHitTime} right prev: {rightPrevHitTime} right diff {Time.time - rightPrevHitTime}");
+					if (leftPrevHitTime > (Time.time - .1f) && rightPrevHitTime > (Time.time - .1f))
 					{
-						print("double");
 						CalculateHit(difference, currType);
 					}
 					break;
@@ -133,21 +131,21 @@ public class Orchestrator : MonoBehaviour
 		}
 	}
 
-    private void UpdateDoubleHitTimes()
-    {
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-			aPrevHitTime = Time.time;
-        }
+	private void UpdateDoubleHitTimes()
+	{
+		if (Input.GetKeyDown(left))
+		{
+			leftPrevHitTime = Time.time;
+		}
 
-		if (Input.GetKeyDown(KeyCode.J))
-        {
-			bPrevHitTime = Time.time;
-        }
-    }
+		if (Input.GetKeyDown(right))
+		{
+			rightPrevHitTime = Time.time;
+		}
+	}
 
-    private void CalculateHit(float difference, GlobalEnums.BeatType beatType)
-    {
+	private void CalculateHit(float difference, GlobalEnums.BeatType beatType)
+	{
 		if (difference < perfectHit)
 		{
 			OnHitBeat(currIndicatorIndex, GlobalEnums.HitType.Perfect, GlobalEnums.BeatType.Single);
@@ -164,23 +162,22 @@ public class Orchestrator : MonoBehaviour
 		{
 			OnMissBeat(currIndicatorIndex);
 		}
-		currIndicatorIndex++;
 
-		if (map.beats[currIndicatorIndex].beatType == GlobalEnums.BeatType.TwoKey) ;
-			//ResetHitTimes();
+		if (map.beats[currIndicatorIndex].beatType == GlobalEnums.BeatType.TwoKey)
+			ResetHitTimes();
 	}
 
-    private void ResetHitTimes()
-    {
-		aPrevHitTime = bPrevHitTime = -1;
-    }
+	private void ResetHitTimes()
+	{
+		leftPrevHitTime = rightPrevHitTime = -1;
+	}
 
-    private void UpdateCurrentIndicator()
+	private void UpdateCurrentIndicator()
 	{
 		float timeOfCurrIndicator = map.beats[currIndicatorIndex].time;
 		if (songTime > timeOfCurrIndicator + okHit && currIndicatorIndex + 1 <= map.beats.Count)
 		{
-			currIndicatorIndex++;
+			IncrementCurrIndicatorIndex();
 		}
 
 		if (currIndicatorIndex >= 1)
@@ -190,7 +187,7 @@ public class Orchestrator : MonoBehaviour
 			while (tempIndex >= 0 && !map.beats[tempIndex].hasBeenPassed)
 			{
 				//print($"{tempIndex} has not been hit");
-				OnMissBeat(tempIndex);
+				OnPassBeat(tempIndex);
 				tempIndex--;
 			}
 		}
@@ -202,16 +199,32 @@ public class Orchestrator : MonoBehaviour
 		map.beats[index].hasBeenPassed = true;
 		indicators[index].transform.GetChild(0).GetComponent<ParticleSystem>().Play();
 		indicators[index].transform.GetChild(1).GetComponent<ParticleSystem>().Play();
-		//play good sound/particle effect
 		indicators[index].GetComponent<SpriteRenderer>().forceRenderingOff = true;
 		GameUIController.Instance.UpdateScoreAndComboText();
 		GameUIController.Instance.UpdateFeedbackText(hitType);
+		IncrementCurrIndicatorIndex();
 	}
 
 	public void OnMissBeat(int index)
 	{
 		Scorer.Miss();
-		//need to check if it's close enough to destroy or just ignore input?
+		//if the indicator is far enough ahead just count miss and leave indicator
+		if (map.beats[index].time - songTime > 1f)
+			return;
+
+		map.beats[index].hasBeenPassed = true;
+		indicators[index].GetComponent<SpriteRenderer>().forceRenderingOff = true;
+		GameObject failedX = GameObject.Instantiate(failedPrefab);
+		failedX.transform.position = indicators[index].transform.position;
+		Destroy(failedX, 1f);
+		GameUIController.Instance.UpdateScoreAndComboText();
+		GameUIController.Instance.UpdateFeedbackText(GlobalEnums.HitType.Miss);
+		IncrementCurrIndicatorIndex();
+	}
+
+	public void OnPassBeat(int index)
+	{
+		Scorer.Miss();
 		map.beats[index].hasBeenPassed = true;
 		indicators[index].GetComponent<SpriteRenderer>().forceRenderingOff = true;
 		GameObject failedX = GameObject.Instantiate(failedPrefab);
@@ -220,6 +233,16 @@ public class Orchestrator : MonoBehaviour
 		GameUIController.Instance.UpdateScoreAndComboText();
 		GameUIController.Instance.UpdateFeedbackText(GlobalEnums.HitType.Miss);
 	}
+
+	private void IncrementCurrIndicatorIndex()
+    {
+		currIndicatorIndex++;
+
+		if (currIndicatorIndex >= map.beats.Count)
+        {
+			songHasFinished = true;
+        }
+    }
 
 	private void SpawnBeatIndicators()
 	{
@@ -233,7 +256,7 @@ public class Orchestrator : MonoBehaviour
 			//we have non-normalized time already, add normalized time
 			map.beats[i].normalizedTime = map.beats[i].time / songClip.length;
 			switch (map.beats[i].beatType)
-            {
+			{
 				case GlobalEnums.BeatType.Single:
 					indicator = GameObject.Instantiate(indicatorPrefab);
 					break;
@@ -247,7 +270,7 @@ public class Orchestrator : MonoBehaviour
 					indicator = GameObject.Instantiate(indicatorPrefab);
 					Debug.LogError("Unkown beat type: " + (int)map.beats[i].beatType);
 					break;
-            }
+			}
 			indicator.transform.position = lineWalker.GetPoint(map.beats[i].normalizedTime);
 			indicator.transform.parent = indicatorsParent.transform;
 			indicators.Add(indicator);
