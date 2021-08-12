@@ -198,7 +198,6 @@ public class Orchestrator : MonoBehaviour
 		int gainedScore = Scorer.Hit(GlobalEnums.BeatType.Single);
 		map.beats[index].hasBeenPassed = true;
 		indicators[index].transform.GetChild(0).GetComponent<ParticleSystem>().Play();
-		indicators[index].transform.GetChild(1).GetComponent<ParticleSystem>().Play();
 		indicators[index].GetComponent<SpriteRenderer>().forceRenderingOff = true;
 		GameUIController.Instance.UpdateScoreAndComboText();
 		GameUIController.Instance.UpdateFeedbackText(hitType);
@@ -235,14 +234,14 @@ public class Orchestrator : MonoBehaviour
 	}
 
 	private void IncrementCurrIndicatorIndex()
-    {
+	{
 		currIndicatorIndex++;
 
 		if (currIndicatorIndex >= map.beats.Count)
-        {
+		{
 			songHasFinished = true;
-        }
-    }
+		}
+	}
 
 	private void SpawnBeatIndicators()
 	{
