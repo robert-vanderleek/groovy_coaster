@@ -115,21 +115,4 @@ public class SpectralFluxAnalyzer {
 			return false;
 		}
 	}
-
-	void logSample(int indexToLog) {
-		int windowStart = Mathf.Max (0, indexToLog - thresholdWindowSize / 2);
-		int windowEnd = Mathf.Min (spectralFluxSamples.Count - 1, indexToLog + thresholdWindowSize / 2);
-		Debug.Log (string.Format (
-			"Peak detected at song time {0} with pruned flux of {1} ({2} over thresh of {3}).\n" +
-			"Thresh calculated on time window of {4}-{5} ({6} seconds) containing {7} samples.",
-			spectralFluxSamples [indexToLog].time,
-			spectralFluxSamples [indexToLog].prunedSpectralFlux,
-			spectralFluxSamples [indexToLog].spectralFlux,
-			spectralFluxSamples [indexToLog].threshold,
-			spectralFluxSamples [windowStart].time,
-			spectralFluxSamples [windowEnd].time,
-			spectralFluxSamples [windowEnd].time - spectralFluxSamples [windowStart].time,
-			windowEnd - windowStart
-		));
-	}
 }

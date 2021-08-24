@@ -15,6 +15,7 @@ public class MainMenuHandler : MonoBehaviour
 	public GameObject songPrefab;
 	public GameObject scrollContentObj;
 	public GameObject levelInfo;
+	public GameObject beatmapGenerator;
 	private string musicFilesPath;
 	private List<AudioClip> clips;
 
@@ -58,7 +59,6 @@ public class MainMenuHandler : MonoBehaviour
 				toggle.isOn = true;
 		}
 		levelInfo.GetComponent<AudioSource>().clip = clips[0];
-		
 	}
 
 	private IEnumerator GetClipList()
@@ -76,6 +76,23 @@ public class MainMenuHandler : MonoBehaviour
 			}
 		}
 		PopulateAvailableLevels();
+	}
+
+	public void AddSong(AudioClip clip)
+	{
+		ToggleGroup toggleGroup = scrollContentObj.GetComponent<ToggleGroup>();
+		GameObject songUIPanel = GameObject.Instantiate(songPrefab);
+		songUIPanel.transform.position = Vector3.zero;
+		songUIPanel.name = clip.name;
+		string songName = clip.name.Split('-')[0];
+		songUIPanel.transform.SetParent(scrollContentObj.transform, false);
+		songUIPanel.GetComponentInChildren<TextMeshProUGUI>().text = songName + " - " + clip.length;
+		Toggle toggle = songUIPanel.GetComponentInChildren<Toggle>();
+		toggle.group = toggleGroup;
+		toggle.onValueChanged.AddListener(delegate
+		{
+			OnToggleChange(toggle);
+		});
 	}
 
 	public void OnToggleChange(Toggle toggle)

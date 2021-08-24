@@ -10,18 +10,15 @@ using DSPLib;
 
 public class SongController : MonoBehaviour {
 
-	public BeatmapGenerator generator;
-
 	int numChannels;
 	int numTotalSamples;
 	int sampleRate;
 	float clipLength;
 	float[] multiChannelSamples;
 	SpectralFluxAnalyzer preProcessedSpectralFluxAnalyzer;
-
 	AudioSource audioSource;
 
-	void Start()
+	public void Init()
 	{
 		audioSource = GetComponent<AudioSource>();
 		preProcessedSpectralFluxAnalyzer = new SpectralFluxAnalyzer();
@@ -99,17 +96,15 @@ public class SongController : MonoBehaviour {
 
 				// Send our magnitude data off to our Spectral Flux Analyzer to be analyzed for peaks
 				times.Add(curSongTime);
-				preProcessedSpectralFluxAnalyzer.analyzeSpectrum (Array.ConvertAll (scaledFFTSpectrum, x => (float)x), curSongTime, 1.4f);
+				preProcessedSpectralFluxAnalyzer.analyzeSpectrum (Array.ConvertAll (scaledFFTSpectrum, x => (float)x), curSongTime, 1.6f);
 			}
 			if (preProcessedSpectralFluxAnalyzer.spectralFluxSamples == null)
             {
 				print("null samples!");
 				return;
             }
-			generator.CreateBeatmap(preProcessedSpectralFluxAnalyzer.spectralFluxSamples);
-			Debug.Log ("Spectrum Analysis done");
-			Debug.Log ("Background Thread Completed");
-				
+			//generator.CreateBeatmap(preProcessedSpectralFluxAnalyzer.spectralFluxSamples);
+			Debug.Log ("Spectrum Analysis done");				
 		} catch (Exception e) {
 			// Catch exceptions here since the background thread won't always surface the exception to the main thread
 			Debug.Log (e.ToString ());
