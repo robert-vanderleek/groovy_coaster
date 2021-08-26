@@ -16,11 +16,6 @@ public class SettingsManager : MonoBehaviour
 	public Settings settings;
 	private string settingsPath;
 
-	private void Update()
-	{
-		//LayoutRebuilder.ForceRebuildLayoutImmediate(colorPicker.transform.parent.GetComponent<RectTransform>());
-	}
-
 	private void Awake()
 	{
 		settingsPath = Application.persistentDataPath + "/settings.json";

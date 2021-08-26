@@ -10,8 +10,9 @@ public class Orchestrator : MonoBehaviour
 	public GameObject twoHitIndicatorPrefab;
 	public GameObject failedPrefab;
 
+	private GameObject levelInfo;
 	private Beatmap map;
-	private string mapFilesPath = Application.dataPath + @"\Beatmaps";
+	private string mapFilesPath;
 	private string songName;
 	private AudioClip songClip;
 	private List<GameObject> indicators = new List<GameObject>();
@@ -19,8 +20,8 @@ public class Orchestrator : MonoBehaviour
 
 	public KeyCode left;
 	public KeyCode right;
-	private float leftPrevHitTime = Time.time;
-	private float rightPrevHitTime = Time.time;
+	private float leftPrevHitTime;
+	private float rightPrevHitTime;
 
 	private bool songHasStarted = false;
 	private bool songHasFinished = false;
@@ -33,11 +34,18 @@ public class Orchestrator : MonoBehaviour
 	private float goodHit = .1f;
 	private float perfectHit = .05f;
 
+	private void Awake()
+	{
+		audioSource = GetComponent<AudioSource>();
+		levelInfo = GameObject.Find("LevelInfo");
+		mapFilesPath = Application.dataPath + @"\Beatmaps";
+		leftPrevHitTime = Time.time;
+		rightPrevHitTime = Time.time;
+	}
+
 	void Start()
 	{
-		Application.targetFrameRate = 144;
-		audioSource = GetComponent<AudioSource>();
-		GameObject levelInfo = GameObject.Find("LevelInfo");
+		LoadAndApplySettings();
 
 		if (levelInfo != null)
 		{
@@ -270,5 +278,15 @@ public class Orchestrator : MonoBehaviour
 			indicator.transform.parent = indicatorsParent.transform;
 			indicators.Add(indicator);
 		}
+	}
+
+	private void LoadAndApplySettings()
+	{
+		Settings settings = levelInfo.GetComponent<SettingsManager>().settings;
+
+		audioSource.volume = settings.volume;
+		left = settings.keyA;
+		right = settings.keyB;
+		walker.GetComponent<SpriteRenderer>().color = new Color(settings.r, settings.g, settings.b);
 	}
 }
