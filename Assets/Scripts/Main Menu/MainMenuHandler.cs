@@ -7,11 +7,14 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
+using HSVPicker;
 
 public class MainMenuHandler : MonoBehaviour
 {
-	public GameObject quitPlayButtons;
-	public GameObject levelSelectParent;
+	public SettingsManager settingsManager;
+	public GameObject mainButtonsUIParent;
+	public GameObject levelSelectUIParent;
+	public GameObject settingsUIParent;
 	public GameObject songPrefab;
 	public GameObject scrollContentObj;
 	public GameObject levelInfo;
@@ -29,7 +32,14 @@ public class MainMenuHandler : MonoBehaviour
 	{
 		musicFilesPath = Application.dataPath + @"\Music";
 		DontDestroyOnLoad(levelInfo);
+		PopulateSettings();
 		StartCoroutine(GetClipList());
+	}
+
+	private void PopulateSettings()
+	{
+		settingsManager.PopulateSettingsMenu();
+
 	}
 
 	private void PopulateAvailableLevels()
@@ -109,16 +119,90 @@ public class MainMenuHandler : MonoBehaviour
 		SceneManager.LoadScene(1);
 	}
 
-	public void OnBackButton()
+	public void OnLevelSelectBackButton()
 	{
-		quitPlayButtons.SetActive(true);
-		levelSelectParent.SetActive(false);
+		mainButtonsUIParent.SetActive(true);
+		levelSelectUIParent.SetActive(false);
 	}
 
 	public void OnPlayButton()
 	{
-		quitPlayButtons.SetActive(false);
-		levelSelectParent.SetActive(true);
+		levelSelectUIParent.SetActive(true);
+		mainButtonsUIParent.SetActive(false);
+	}
+
+	public void OnSettingsButton()
+	{
+		mainButtonsUIParent.SetActive(false);
+		settingsUIParent.SetActive(true);
+		//LayoutRebuilder.ForceRebuildLayoutImmediate(GameObject.Find("Color").GetComponent<RectTransform>());
+	}
+
+	public void OnSettingsBackButton()
+	{
+		settingsManager.SaveSettingsAsJSON();
+		settingsUIParent.SetActive(false);
+		mainButtonsUIParent.SetActive(true);
+	}
+
+	public void OnVolumeSliderChanged(Slider slider)
+	{
+		settingsManager.settings.volume = slider.value;
+	}
+
+	public void OnKeyAButtonRebind()
+	{
+		StartCoroutine(AwaitKeypressA());
+	}
+
+	public void OnKeyBButtonRebind()
+	{
+		StartCoroutine(AwaitKeypressB());
+	}
+
+	public IEnumerator AwaitKeypressA()
+	{
+		while (!Input.anyKeyDown)
+		{
+			yield return null;
+		}
+
+		foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
+		{
+			if (Input.GetKey(kcode))
+			{
+				print("keycode: " + kcode);
+				settingsManager.settings.keyA = kcode;
+				settingsManager.PopulateSettingsMenu();
+				yield break;
+			}
+		}
+	}
+
+	public IEnumerator AwaitKeypressB()
+	{
+		while (!Input.anyKeyDown)
+		{
+			yield return null;
+		}
+
+		foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
+		{
+			if (Input.GetKey(kcode))
+			{
+				print("keycode: " + kcode);
+				settingsManager.settings.keyB = kcode;
+				settingsManager.PopulateSettingsMenu();
+				yield break;
+			}
+		}
+	}
+
+	public void OnColorChange(ColorPicker picker)
+	{
+		settingsManager.settings.r = picker.R;
+		settingsManager.settings.g = picker.G;
+		settingsManager.settings.b = picker.B;
 	}
 
 	public void OnQuitButton()

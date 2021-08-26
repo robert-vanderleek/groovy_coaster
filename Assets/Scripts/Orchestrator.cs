@@ -11,16 +11,16 @@ public class Orchestrator : MonoBehaviour
 	public GameObject failedPrefab;
 
 	private Beatmap map;
-	private string mapFilesPath;
+	private string mapFilesPath = Application.dataPath + @"\Beatmaps";
 	private string songName;
 	private AudioClip songClip;
-	private List<GameObject> indicators;
+	private List<GameObject> indicators = new List<GameObject>();
 	private AudioSource audioSource;
 
 	public KeyCode left;
 	public KeyCode right;
-	private float leftPrevHitTime;
-	private float rightPrevHitTime;
+	private float leftPrevHitTime = Time.time;
+	private float rightPrevHitTime = Time.time;
 
 	private bool songHasStarted = false;
 	private bool songHasFinished = false;
@@ -36,12 +36,8 @@ public class Orchestrator : MonoBehaviour
 	void Start()
 	{
 		Application.targetFrameRate = 144;
-		leftPrevHitTime = Time.time;
-		rightPrevHitTime = Time.time;
-		mapFilesPath = Application.dataPath + @"\Beatmaps";
 		audioSource = GetComponent<AudioSource>();
 		GameObject levelInfo = GameObject.Find("LevelInfo");
-		indicators = new List<GameObject>();
 
 		if (levelInfo != null)
 		{
